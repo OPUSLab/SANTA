@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+
+build/
+dist/
+*.egg-info/
+*.so
+
+outputs/
+tutorial_code/benchmark_outputs*/
+tutorial_code/inference_tutorial_output.json
+
+*.log
+nohup*.out
+
+.DS_Store
+desktop.ini

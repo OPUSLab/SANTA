@@ -1,16 +1,15 @@
 # Synthetic sample data
 
-These JSONL files are synthetic and are included only so the public repository shows the expected schema and can run a short functional benchmark without shipping the paper/rebuttal validation data.
+These JSONL files are synthetic and are included only so the public repository shows the expected schema and can run a short functional benchmark without shipping the paper evaluation data.
 
 ## Files
 
-- `sample_qa2.jsonl`: use this with `tutorial_code/benchmark_longctx.py` for public smoke tests.
-- `sample_fwe.jsonl`: optional schema example for a frequency/counting-style record. It is not needed if the public repo removes the rebuttal/error-analysis scripts.
-- `sample_qa2_32k.jsonl`: optional synthetic long-context file intended for commands that keep `--target-prompt-token-length 32768`. This is heavier than `sample_qa2.jsonl` and is not needed for a quick smoke test.
+- sample_qa2.jsonl: small synthetic benchmark smoke-test input.
+- sample_qa2_32k.jsonl: optional synthetic long-context smoke-test input.
 
 ## JSONL schema
 
-Each line is one JSON object with the same fields as the private validation files:
+Each line is one JSON object with the same fields as the full evaluation files:
 
 ```json
 {

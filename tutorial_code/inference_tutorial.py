@@ -24,13 +24,13 @@ from runtime_common import (
 )
 
 
-DEFAULT_BACKENDS = ["fa2", "santa_prop"]
+DEFAULT_BACKENDS = ["fa2", "santa_flash", "santa_prop"]
 
 
 def parse_args() -> argparse.Namespace:
     here = os.path.dirname(os.path.abspath(__file__))
     parser = argparse.ArgumentParser(
-        description="Single-prompt runner via HF generate(custom_generate=...) on the shared batched contiguous-KV scaffold (main comparison: FA2 vs S^2ANTA-prop)."
+        description="Single-prompt runner for FA2, S^2ANTA-Flash, and S^2ANTA-Prop on the shared batched contiguous-KV scaffold."
     )
     parser.add_argument("--model-name", default="meta-llama/Meta-Llama-3.1-8B-Instruct")
     parser.add_argument("--prompt-file", default=os.path.join(here, "prompt.txt"))
@@ -346,7 +346,8 @@ def main() -> None:
         "generation_surface": args.generation_surface,
         "results": results,
     }
-
+    
+    os.makedirs(os.path.dirname(os.path.abspath(args.output_file)), exist_ok=True)
     with open(args.output_file, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2, ensure_ascii=False)
 

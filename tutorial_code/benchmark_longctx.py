@@ -34,15 +34,15 @@ from runtime_common import (
 )
 
 
-MAIN_PAPER_BACKENDS = ["fa2", "santa_prop"]
+MAIN_PAPER_BACKENDS = ["fa2", "santa_flash", "santa_prop"]
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Batched contiguous-KV long-context benchmark through HF generate(custom_generate=...): FA2 exact dense decode vs S^2ANTA-prop"
+        description="Batched contiguous-KV long-context benchmark through HF generate(custom_generate=...): FA2 exact dense decode vs S^2ANTA-Flash and S^2ANTA-Prop"
     )
     parser.add_argument("--model-name", default="meta-llama/Meta-Llama-3.1-8B-Instruct")
-    parser.add_argument("--dataset", required=True, help="Path to validation_qa2.jsonl")
+    parser.add_argument("--dataset", required=True, help="Path to benchmark JSONL; see data/README.md for schema")
     parser.add_argument("--num-examples", type=int, default=None)
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--batch-sizes", nargs="*", type=int, default=None)

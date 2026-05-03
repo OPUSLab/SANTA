@@ -224,6 +224,7 @@ Each line is one JSON object:
 - `santa_flash` and `santa_prop` use the same public harness and output format.
 - `santa_flash` exposes a batched decode entry point. `santa_prop` currently exposes a scalar decode entry point that is wrapped by the Python backend for batched inputs.
 - `flashinfer` and `sdpa` adapters are retained as optional references; the primary public comparison commands use `fa2`, `santa_flash`, and `santa_prop`.
+- The included S²ANTA-Prop setup.py currently targets the architectures used for the reported artifact build. If you are targeting a different GPU architecture, update the arch list in santa_fused_proportional_tile_budgets/setup.py before building.
 
 ## License
 
