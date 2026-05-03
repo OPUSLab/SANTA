@@ -83,6 +83,25 @@ python -m pip install flashinfer-python==0.6.6
 
 The checked-in S²ANTA-Prop build script targets SM 8.6 / 8.9. The example commands below use SM 8.9, matching RTX 6000 Ada. Other GPU architectures are not claimed for this release unless the extension build scripts are modified and the kernels are revalidated.
 
+Building the custom CUDA extensions requires more than CUDA-enabled PyTorch wheels. A local CUDA toolkit with `nvcc` must be installed and discoverable by PyTorch's extension builder. Before installing the extension packages, make sure `nvcc` is on `PATH` and `CUDA_HOME` points to the CUDA toolkit root. For the tested PyTorch `cu128` stack, use a compatible CUDA 12.x toolkit.
+
+```bash
+export CUDA_HOME=/usr/local/cuda-12.8  # adjust if your CUDA toolkit is installed elsewhere
+export PATH="$CUDA_HOME/bin:$PATH"
+
+which nvcc
+nvcc --version
+
+python - <<'PY'
+import torch
+from torch.utils.cpp_extension import CUDA_HOME
+print("torch.version.cuda =", torch.version.cuda)
+print("CUDA_HOME =", CUDA_HOME)
+PY
+```
+
+If `which nvcc` fails or `CUDA_HOME` prints `None`, configure the CUDA toolkit before running the extension install commands below.
+
 ```bash
 export CUDA_VISIBLE_DEVICES=0
 export TORCH_CUDA_ARCH_LIST="8.9"
@@ -97,6 +116,13 @@ The installed extension module names are:
 ```text
 santa_flash_batch_cuda
 santa_prop_batch_cuda
+```
+
+Decode entry points:
+
+```text
+santa_flash_batch_cuda: decode_systematic_batched, decode_systematic_scalar
+santa_prop_batch_cuda:  decode_systematic_scalar
 ```
 
 ## Quick single-prompt example
@@ -231,7 +257,7 @@ Each line is one JSON object:
 - The runtime is intentionally narrow: single GPU, contiguous KV cache, fixed-length lockstep batch, greedy decoding, no vLLM, no paged KV, and no serving scheduler.
 - The Python runtime shares prefill/cache setup across backends and swaps only the decode attention backend.
 - `santa_flash` and `santa_prop` use the same benchmark harness and output format.
-- Both S²ANTA extension modules expose batched and scalar decode entry points. The benchmark harness uses the batched path and records the actual backend mode in output metadata.
+- `santa_flash` exposes both batched and scalar decode entry points. `santa_prop` exposes a scalar decode entry point. When `santa_prop` is requested with batch size greater than one, the Python adapter calls the scalar entry point once per batch element and records `actual_mode="single_loop_fallback"` in the output metadata. The benchmark harness records the actual backend mode for each run, so outputs identify whether a backend used the true batched path or the scalar fallback.
 - `flashinfer` and `sdpa` adapters are retained as optional references; the main comparison commands use `fa2`, `santa_flash`, and `santa_prop`.
 - The checked-in S²ANTA-Prop build script targets SM 8.6 / 8.9. The example commands target RTX 6000 Ada, SM 8.9. Other GPU architectures are not claimed for this release unless the setup scripts are modified and the kernels are revalidated.
 

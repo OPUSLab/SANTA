@@ -639,7 +639,7 @@ __global__ void tile_budgets_kernel(
     const float mt  = frac[t]; // cached m_tiles[h,t]
     const float ell = ell_tiles[h * T_c + t];
     const float Wt  = __expf(mt - mstar) * ell;
-    frac[t] = Wt;              // overwrite cache with W_t (same as old kernel)
+    frac[t] = Wt;              // reuse scratch storage for W_t
     z_local += Wt;
   }
   atomicAdd(&sZ, z_local);
