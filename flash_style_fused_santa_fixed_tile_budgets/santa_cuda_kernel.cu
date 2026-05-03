@@ -6,7 +6,7 @@
 //   - Supports a separate L_valid and L_storage so Python can keep a fixed contiguous
 //     cache [B, T_storage, KVH, D] and advance valid_len in place during decode.
 //
-// Supported (for now):
+// Supported configurations:
 //  - GH == 4
 //  - D  == 128
 //  - BN == 32 or 64 or 256 (specialized kernels)

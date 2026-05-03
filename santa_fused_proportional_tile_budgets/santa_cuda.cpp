@@ -14,7 +14,7 @@
 //       - additionally, if SANTA_PASS1=vec and block_n<=0, we force block_n=256,
 //         because the vec kernel is only correct for BN=256.
 //
-// Build: via PyTorch CUDAExtension (same flags you already use).
+// Build: via PyTorch CUDAExtension using the package's extension flags.
 
 #include <torch/extension.h>
 #include <ATen/cuda/CUDAContext.h>
@@ -53,7 +53,7 @@ static inline int _pass1_mode_from_env() {
 // Heuristic for auto block_n selection (block_n <= 0).
 // L is the total KV length (K_g.size(0)) in NHD layout.
 //
-// Based on your sweep (S=1024) on RTX 6000 Ada for H=32, KVH=8, D=128.
+// Empirically chosen from an S=1024 sweep on RTX 6000 Ada for H=32, KVH=8, D=128.
 // Roughly:
 //   - small L: 32
 //   - mid   L: 64

@@ -105,7 +105,7 @@ def choose_surrogate_pad_token_id_for_hf_generate(
 
     For this benchmark path, prompts are uniform-length and unpadded. Some Transformers
     versions warn when attention_mask is omitted and pad_token_id == eos_token_id. To avoid
-    that warning without passing attention_mask into the buggy custom_generate path, we
+    that warning without passing attention_mask into the compatibility-sensitive custom_generate path, we
     choose a surrogate pad token that:
       - is not an EOS/stop token, and
       - does not appear anywhere in the prompt batch.
@@ -137,7 +137,7 @@ def choose_surrogate_pad_token_id_for_hf_generate(
         if preferred_pad_token_id is not None:
             return int(preferred_pad_token_id)
         if eos_like:
-            # Fall back to EOS if we truly cannot do better; this may re-enable the HF warning.
+            # Fall back to EOS if no surrogate pad token is available.
             return int(sorted(eos_like)[0])
         return 0
 

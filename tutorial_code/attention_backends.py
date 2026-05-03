@@ -12,7 +12,7 @@ from env_utils import configure_flashinfer_runtime, format_flashinfer_exception
 
 
 FA2_PAPER_TARGET_VERSION = "2.7.4.post1"
-FLASHINFER_PAPER_TARGET_VERSION = "0.5.3"
+FLASHINFER_PAPER_TARGET_VERSION = "0.6.6"
 
 
 class BackendError(RuntimeError):

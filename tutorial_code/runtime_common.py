@@ -160,7 +160,7 @@ def maybe_cuda_sync(device: torch.device) -> None:
 
 
 # ============================================================
-# RoPE helpers (kept close to the original tutorial)
+# RoPE helpers used by the tutorial runtime.
 # ============================================================
 
 

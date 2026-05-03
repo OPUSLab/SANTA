@@ -593,7 +593,7 @@ __global__ void tile_budgets_kernel(
   float* frac = reinterpret_cast<float*>(smem_raw);          // size T_c
   int*   idx  = reinterpret_cast<int*>(frac + T_c);          // size T_c
 
-  // ---- NEW: compute m_star[h] = max_t m_tiles[h,t]
+  // Compute m_star[h] = max_t m_tiles[h,t].
   // Also cache m_tiles[h,t] into frac[t] so we can reuse it when forming W_t.
   __shared__ float s_warp_max[32]; // enough for up to 1024 threads (32 warps)
 
@@ -628,7 +628,7 @@ __global__ void tile_budgets_kernel(
   const float mstar = s_warp_max[0];
   if (tid == 0 && m_star) m_star[h] = mstar;
 
-  // ---- ORIGINAL kernel logic continues, but now uses local `mstar`
+  // Continue the decode computation using the local mstar value.
   // (1) Accumulate Z = sum_t exp(m_t - m*) * ell_t   (store W_t temporarily in frac[t])
   __shared__ float sZ;
   if (tid == 0) sZ = 0.0f;
