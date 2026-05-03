@@ -2,12 +2,12 @@
 
 This repository contains the CUDA/PyTorch extension kernels and single-GPU benchmark harness for the S²ANTA long-context decoding experiments.
 
-The public artifact includes two S²ANTA decode variants:
+The repository includes two S²ANTA decode variants:
 
 - `santa_flash`: S²ANTA-Flash, a fixed tile-budget decode kernel.
 - `santa_prop`: S²ANTA-Prop, a proportional tile-budget decode kernel.
 
-The benchmark harness compares these kernels against `fa2`, an exact dense FlashAttention-2 decode backend using `flash_attn_with_kvcache`. The included sample data is synthetic and is intended only for smoke tests and schema documentation; it is not the paper evaluation set.
+The benchmark harness compares these kernels against `fa2`, an exact dense FlashAttention-2 decode backend using `flash_attn_with_kvcache`. The included JSONL files are synthetic examples for demonstrating the expected data format and running quick functional checks; they are not the paper evaluation data.
 
 ## Repository layout
 
@@ -28,56 +28,65 @@ tutorial_code/
   compare_outputs.py          # pairwise comparison of saved generations
   env_utils.py                # optional FlashInfer runtime helpers
   hf_generate_bridge.py       # Hugging Face generate(custom_generate=...) bridge
-  inference_tutorial.py       # single-prompt smoke/demo runner
-  prompt.txt                  # example prompt for the smoke runner
+  inference_tutorial.py       # single-prompt generation example
+  prompt.txt                  # example prompt for the generation script
   runtime_common.py           # shared model/cache/decode runtime
 
 data/
   README.md
-  sample_qa2.jsonl            # small synthetic benchmark smoke-test input
-  sample_qa2_32k.jsonl        # optional synthetic long-context smoke-test input
+  sample_qa2.jsonl            # small synthetic benchmark example
+  sample_qa2_32k.jsonl        # optional synthetic long-context example
 ```
 
 ## Requirements
 
-The artifact is designed for a CUDA-capable NVIDIA GPU with a CUDA-enabled PyTorch installation, a compatible CUDA toolkit/`nvcc`, FlashAttention-2, and access to the Llama 3.1 8B Instruct weights or another compatible Llama-style model.
+The reported experiments and example commands target NVIDIA RTX 6000 Ada GPUs, i.e. SM 8.9, with Python 3.10, CUDA-enabled PyTorch, FlashAttention-2, and the two S²ANTA CUDA extension modules.
 
-The kernels are specialized for the Llama-3.1-8B-style attention geometry used in the experiments: head dimension 128 with GQA group size 4. The runtime uses a single GPU, contiguous KV cache, greedy decoding, and fixed-length lockstep batches.
+Tested software stack:
+
+```text
+GPU: NVIDIA RTX 6000 Ada Generation, SM 8.9
+Python: 3.10
+PyTorch: 2.10.0+cu128
+Transformers: 4.57.0
+FlashAttention: 2.7.4.post1
+FlashInfer: 0.6.6, optional legacy/reference backend only
+GCC/G++: 13.x
+```
 
 ## Install
 
-Create an environment and install CUDA-enabled PyTorch for the local CUDA version first.
+Create an environment and install CUDA-enabled PyTorch before installing the Python package dependencies.
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 
-# Install torch separately using the command appropriate for the machine.
-# Example only:
-# python -m pip install torch --index-url https://download.pytorch.org/whl/cu128
+# Install CUDA-enabled torch separately.
+# Tested command:
+python -m pip install --index-url https://download.pytorch.org/whl/cu128 torch==2.10.0+cu128
 
 python -m pip install -r requirements.txt
 python -m pip install flash-attn==2.7.4.post1 --no-build-isolation
 ```
 
-Optional legacy backend:
+Optional legacy/reference backend:
 
 ```bash
-python -m pip install flashinfer-python==0.5.3
+python -m pip install flashinfer-python==0.6.6
 ```
 
 `flashinfer` is not required for the S²ANTA-Flash/S²ANTA-Prop comparisons.
 
 ## Build the S²ANTA CUDA extensions
 
-Set `TORCH_CUDA_ARCH_LIST` for the GPUs being targeted, or leave it unset and let PyTorch infer target architectures from the visible CUDA device(s).
+The checked-in S²ANTA-Prop build script targets SM 8.6 / 8.9. The example commands below use SM 8.9, matching RTX 6000 Ada. Other GPU architectures are not claimed for this release unless the extension build scripts are modified and the kernels are revalidated.
 
 ```bash
-# Optional examples:
-# export TORCH_CUDA_ARCH_LIST="8.0"       # A100
-# export TORCH_CUDA_ARCH_LIST="8.6 8.9"   # Ampere/Ada workstation GPUs
-# export TORCH_CUDA_ARCH_LIST="9.0"       # H100/H200
+export CUDA_VISIBLE_DEVICES=0
+export TORCH_CUDA_ARCH_LIST="8.9"
+unset CUDAARCHS
 
 python -m pip install -v --no-build-isolation ./flash_style_fused_santa_fixed_tile_budgets
 python -m pip install -v --no-build-isolation ./santa_fused_proportional_tile_budgets
@@ -90,9 +99,9 @@ santa_flash_batch_cuda
 santa_prop_batch_cuda
 ```
 
-## Quick single-prompt smoke test
+## Quick single-prompt example
 
-This command checks the model-loading path, prefill/cache setup, exact FA2 decode, S²ANTA-Flash decode, and S²ANTA-Prop decode on a short prompt.
+This command runs the model-loading path, prefill/cache setup, exact FA2 decode, S²ANTA-Flash decode, and S²ANTA-Prop decode on a short prompt.
 
 ```bash
 python tutorial_code/inference_tutorial.py \
@@ -100,8 +109,8 @@ python tutorial_code/inference_tutorial.py \
   --prompt-file tutorial_code/prompt.txt \
   --dtype bf16 \
   --backends fa2 santa_flash santa_prop \
-  --santa-s 2048 \
-  --max-new-tokens 32 \
+  --santa-s 32 \
+  --max-new-tokens 8 \
   --output-file ./outputs/inference_tutorial_output.json
 ```
 
@@ -111,9 +120,9 @@ The default generation surface uses Hugging Face `generate(custom_generate=...)`
 --generation-surface manual
 ```
 
-## Synthetic benchmark smoke test
+## Synthetic benchmark example
 
-The small public JSONL is synthetic. It is included to make the benchmark path runnable and to document the expected record format. It is not intended to reproduce paper numbers.
+The included `data/sample_qa2.jsonl` file is synthetic. It is provided to make the benchmark path runnable and to document the expected record format. It is not intended to reproduce paper numbers.
 
 ```bash
 python tutorial_code/benchmark_longctx.py \
@@ -123,11 +132,11 @@ python tutorial_code/benchmark_longctx.py \
   --dtype bf16 \
   --quick-mode \
   --batch-size 2 \
-  --num-examples 4 \
+  --num-examples 2 \
   --target-prompt-token-length 512 \
   --prompt-length-mode truncate \
   --truncation-side left \
-  --max-new-tokens 32 \
+  --max-new-tokens 8 \
   --prefill-chunk-size 512 \
   --santa-s 256 \
   --santa-seed 1690 \
@@ -135,7 +144,7 @@ python tutorial_code/benchmark_longctx.py \
   --output-dir ./outputs/quick
 ```
 
-For a synthetic run that exercises the 32k truncation path, use `data/sample_qa2_32k.jsonl` and restore the longer prompt target:
+For a synthetic run that exercises the 32k truncation path, use `data/sample_qa2_32k.jsonl`:
 
 ```bash
 python tutorial_code/benchmark_longctx.py \
@@ -159,7 +168,7 @@ python tutorial_code/benchmark_longctx.py \
 
 ## Paper-scale benchmark template
 
-Paper-scale runs require a benchmark JSONL with the same schema as the synthetic samples. The paper evaluation data is not included in this repository.
+To reproduce paper-scale measurements, provide an evaluation JSONL with the same schema as the synthetic samples. The paper evaluation data is not included in this repository.
 
 ```bash
 python tutorial_code/benchmark_longctx.py \
@@ -221,10 +230,10 @@ Each line is one JSON object:
 
 - The runtime is intentionally narrow: single GPU, contiguous KV cache, fixed-length lockstep batch, greedy decoding, no vLLM, no paged KV, and no serving scheduler.
 - The Python runtime shares prefill/cache setup across backends and swaps only the decode attention backend.
-- `santa_flash` and `santa_prop` use the same public harness and output format.
-- `santa_flash` exposes a batched decode entry point. `santa_prop` currently exposes a scalar decode entry point that is wrapped by the Python backend for batched inputs.
-- `flashinfer` and `sdpa` adapters are retained as optional references; the primary public comparison commands use `fa2`, `santa_flash`, and `santa_prop`.
-- The included S²ANTA-Prop setup.py currently targets the architectures used for the reported artifact build. If you are targeting a different GPU architecture, update the arch list in santa_fused_proportional_tile_budgets/setup.py before building.
+- `santa_flash` and `santa_prop` use the same benchmark harness and output format.
+- Both S²ANTA extension modules expose batched and scalar decode entry points. The benchmark harness uses the batched path and records the actual backend mode in output metadata.
+- `flashinfer` and `sdpa` adapters are retained as optional references; the main comparison commands use `fa2`, `santa_flash`, and `santa_prop`.
+- The checked-in S²ANTA-Prop build script targets SM 8.6 / 8.9. The example commands target RTX 6000 Ada, SM 8.9. Other GPU architectures are not claimed for this release unless the setup scripts are modified and the kernels are revalidated.
 
 ## License
 

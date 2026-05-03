@@ -1,17 +1,22 @@
-# Install CUDA-enabled torch separately for the local CUDA version before using this file.
-# Example only:
-# python -m pip install torch --index-url https://download.pytorch.org/whl/cu128
+# Core Python dependencies for the S²ANTA repository.
+# Install CUDA-enabled torch separately before installing this file.
+#
+# Tested torch stack:
+#   python -m pip install --index-url https://download.pytorch.org/whl/cu128 torch==2.10.0+cu128
+#
+# Tested FlashAttention install:
+#   python -m pip install flash-attn==2.7.4.post1 --no-build-isolation
+#
+# Optional legacy/reference backend:
+#   python -m pip install flashinfer-python==0.6.6
 
-transformers>=4.52.4
-accelerate>=1.0.0
-numpy>=1.23
-ninja>=1.11
-packaging>=23.0
-setuptools>=68.0
-wheel>=0.42
-
-# Install FlashAttention separately because it often needs --no-build-isolation:
-# python -m pip install flash-attn==2.7.4.post1 --no-build-isolation
-
-# Optional legacy/reference backend, not required for the main FA2/S²ANTA commands:
-# flashinfer-python==0.5.3
+transformers==4.57.0
+accelerate==1.13.0
+numpy==2.2.6
+ninja==1.13.0
+packaging==26.0
+setuptools==82.0.1
+wheel==0.46.3
+huggingface-hub==0.36.2
+tokenizers==0.22.2
+safetensors==0.7.0
